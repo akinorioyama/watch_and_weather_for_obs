@@ -114,8 +114,8 @@ body {
 
 .weather-icon {
     display: block;
-    min-height: 70px;
-    min-width: 70px;
+    min-height: 36px;
+    min-width: 36px;
     transform: scale(110%);
     transform-origin: 50% 50%;
 }

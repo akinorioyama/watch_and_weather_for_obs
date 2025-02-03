@@ -83,6 +83,10 @@ let css = document
     .insertAdjacentHTML("afterbegin", slideAnime);
 
 let weatherList = document.getElementById("weather-list");
+const now = new Date();
+const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+const targetDateString = tomorrow.toISOString().split("T")[0];
+
 localDatas.forEach((city, idx) => {
     // 天気APIリクエスト
     const query_params = new URLSearchParams({
@@ -95,13 +99,19 @@ localDatas.forEach((city, idx) => {
         // , "minutely", "daily", "alerts"
     });
 
-    fetch("https://api.openweathermap.org/data/2.5/onecall?" + query_params)
+    fetch("https://api.openweathermap.org/data/2.5/forecast?" + query_params)
         .then((response) => {
             return response.json();
         })
         .then((data) => {
-            responsedWeather = data.daily[0];
+            responsedWeather = data;
             console.log(responsedWeather);
+            const forecastsForDay = data.list.filter(forecast =>
+                forecast.dt_txt.startsWith(targetDateString)
+            );
+            const aggregatedMin = Math.min(...forecastsForDay.map(f => f.main.temp_min));
+            const aggregatedMax = Math.max(...forecastsForDay.map(f => f.main.temp_max));
+            // at 6am, noon, 6pm
             weatherList.innerHTML += `<div class="weather" id=${city.cityName}>
                                         <div class="text-data">
                                             <div class="local-label">${
@@ -110,28 +120,48 @@ localDatas.forEach((city, idx) => {
                                                 <div class="weather-values">
                                                     <div class="min-temp">${
                                                         Math.round(
-                                                            responsedWeather
-                                                                .temp.min
+                                                            aggregatedMin
                                                         ) + "℃"
                                                     }</div>
                                                     <div class="max-temp">${
                                                         Math.round(
-                                                            responsedWeather
-                                                                .temp.max
+                                                            aggregatedMax
                                                         ) + "℃"
                                                     }</div>
                                                 </div>
                                         </div>
                                         <img
                                             class="weather-icon"
-                                            id=${"img-" + city.cityName}
+                                            id=${"img-" + city.cityName + '9am'}
                                             src=${
                                                 "https://openweathermap.org/img/w/" +
-                                                responsedWeather.weather[0]
+                                                forecastsForDay[2].weather[0]
                                                     .icon +
                                                 ".png"
                                             }
-                                            alt="Weather icon"
+                                            alt="Weather icon 6"
+                                        />
+                                        <img
+                                            class="weather-icon"
+                                            id=${"img-" + city.cityName + 'noon'}
+                                            src=${
+                                                "https://openweathermap.org/img/w/" +
+                                                forecastsForDay[4].weather[0]
+                                                    .icon +
+                                                ".png"
+                                            }
+                                            alt="Weather icon noon"
+                                        />
+                                        <img
+                                            class="weather-icon"
+                                            id=${"img-" + city.cityName + '6pm'}
+                                            src=${
+                                                "https://openweathermap.org/img/w/" +
+                                                forecastsForDay[6].weather[0]
+                                                    .icon +
+                                                ".png"
+                                            }
+                                            alt="Weather icon 6"
                                         />
                                     </div>`;
             // 数に応じたCSSの調整
